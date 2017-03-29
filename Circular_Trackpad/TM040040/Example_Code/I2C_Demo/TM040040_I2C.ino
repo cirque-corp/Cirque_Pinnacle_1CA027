@@ -3,7 +3,8 @@
 // ___ Using a Cirque TM040040 with an Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// This application connects to a TM040040 circular touch pad.
+// This application connects to a TM040040 circular touch pad via I2C. To verify that your touch pad is configured 
+// for I2C-mode, make sure that R1 is NOT populated (whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
 // scroll up the window when you touch the sensor. Tools->Serial Monitor can be used to view touch data.
@@ -12,8 +13,8 @@
 //  Hardware Interface
 //  GND
 //  +3.3V
-//  SDA = Pin 18
-//  SCL = Pin 19
+//  SDA = Pin 18  (there MUST be a pull-up to 3.3V on this signal; 4.7k recommended)
+//  SCL = Pin 19  (there MUST be a pull-up to 3.3V on this signal; 4.7k recommended)
 //  DR = Pin 9
 
 // Hardware pin-number labels
@@ -99,7 +100,7 @@ void Pinnacle_ParseAbsolute(byte * data, absData_t * result)
 {
   result->xValue = data[0] | ((data[2] & 0x0F) << 8);
   result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3];
+  result->zValue = data[3] & 0x3F;
 }
 
 // Reads XYZ data from Pinnacle registers 0x14 through 0x17
