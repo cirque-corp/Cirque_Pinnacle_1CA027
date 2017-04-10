@@ -14,8 +14,8 @@
 //  GND
 //  +3.3V
 //  SCK = Pin 13
-//  MOSI = Pin 12
-//  MISO = Pin 11
+//  MISO = Pin 12
+//  MOSI = Pin 11
 //  SS = PIN 10
 //  DR = Pin 9
 
