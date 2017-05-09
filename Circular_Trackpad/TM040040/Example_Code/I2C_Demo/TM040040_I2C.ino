@@ -22,6 +22,9 @@
 #define SCL_PIN   19
 #define DR_PIN    9
 
+#define LED_0     21
+#define LED_1     20
+
 // Cirque's 7-bit I2C Slave Address
 #define SLAVE_ADDR  0x2A
 
@@ -35,16 +38,26 @@
 #define FEEDCONFIG_2  0x1F
 #define Z_IDLE_COUNT  0x05
 
+// Coordinate scaling values
+#define PINNACLE_XMAX     2047    // max value Pinnacle can report for X
+#define PINNACLE_YMAX     1535    // max value Pinnacle can report for Y
+#define PINNACLE_X_LOWER  127     // min "reachable" X value
+#define PINNACLE_X_UPPER  1919    // max "reachable" X value
+#define PINNACLE_Y_LOWER  63      // min "reachable" Y value
+#define PINNACLE_Y_UPPER  1471    // max "reachable" Y value
+#define PINNACLE_X_RANGE  (PINNACLE_X_UPPER-PINNACLE_X_LOWER)
+#define PINNACLE_Y_RANGE  (PINNACLE_Y_UPPER-PINNACLE_Y_LOWER)
+
 // Convenient way to store and access measurements
 typedef struct _absData
 {
   unsigned int xValue;
   unsigned int yValue;
   unsigned int zValue;
+  bool touchDown;
 } absData_t;
 
 absData_t touchData;
-
 
 // setup() gets called once at power-up, sets up serial debug output and Cirque's Pinnacle ASIC.
 void setup()
@@ -53,22 +66,26 @@ void setup()
   while(!Serial); // needed for USB
   Serial.println("X\tY\tZ");
 
+  pinMode(LED_0, OUTPUT);
+
   Pinnacle_Init();
 }
 
 // loop() continuously checks to see if data-ready (DR) is high. If so, reads and reports touch data to terminal.
 void loop()
-{ 
+{
   if(DR_Asserted())
   {    
-    Pinnacle_GetTouchPackets(&touchData);
-    
+    Pinnacle_GetAbsolute(&touchData);
+//    ScaleData(&touchData, 1024, 1024);  // Scale coordinates to arbitrary X, Y resolution
+          
     Serial.print(touchData.xValue);
     Serial.print('\t');
     Serial.print(touchData.yValue);
     Serial.print('\t');
     Serial.println(touchData.zValue);
   }
+  AssertSensorLED(touchData.touchDown);
 }
 
 /*  Pinnacle-based TM040040 Functions  */
@@ -94,29 +111,97 @@ void Pinnacle_Init()
   RAP_Write(0x0A, Z_IDLE_COUNT);
 }
 
-// Merges X_LOW_BYTE, Y_LOW_BYTE, and XY_HIGH_BITS into X,Y,Z coordinates. 
-// Operates on contents of Pinnacle registers 0x14 through 0x17
-void Pinnacle_ParseAbsolute(byte * data, absData_t * result)
-{
-  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
-  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3] & 0x3F;
-}
-
 // Reads XYZ data from Pinnacle registers 0x14 through 0x17
 // Stores result in absData_t struct with xValue, yValue, and zValue members
-void Pinnacle_GetTouchPackets(absData_t * result)
+void Pinnacle_GetAbsolute(absData_t * result)
 {
   byte data[4] = { 0,0,0,0 };
   RAP_ReadBytes(0x14, data, 4);
+  
   Pinnacle_ClearFlags();
-  Pinnacle_ParseAbsolute(data, result);
+  
+  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
+  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
+  result->zValue = data[3] & 0x3F;
+
+  result->touchDown = result->xValue != 0;
 }
 
 // Clears Status1 register flags (SW_CC and SW_DR)
 void Pinnacle_ClearFlags()
 {
   RAP_Write(0x02, 0x00);
+  delayMicroseconds(50);
+}
+
+// Enables/Disables the feed
+void Pinnacle_EnableFeed(bool feedEnable)
+{
+  uint8_t temp;
+
+  RAP_ReadBytes(0x04, &temp, 1);  // Store contents of FeedConfig1 register
+  
+  if(feedEnable)
+  {
+    temp |= 0x01;                 // Set Feed Enable bit
+    RAP_Write(0x04, temp);
+  }
+  else
+  {
+    temp &= ~0x01;                // Clear Feed Enable bit
+    RAP_Write(0x04, temp);
+  }
+}
+
+/*  ERA (Extended Register Access) Functions  */
+// Reads <count> bytes from an extended register at <address> (16-bit address),
+// stores values in <*data>
+void ERA_ReadBytes(uint16_t address, uint8_t * data, uint16_t count)
+{  
+  uint8_t ERAControlValue = 0xFF;
+
+  Pinnacle_EnableFeed(false); // Disable feed
+
+  RAP_Write(0x1C, (uint8_t)(address >> 8));     // Send upper byte of ERA address
+  RAP_Write(0x1D, (uint8_t)(address & 0x00FF)); // Send lower byte of ERA address
+  
+  for(uint16_t i = 0; i < count; i++)
+  {
+    RAP_Write(0x1E, 0x05);  // Signal ERA-read (auto-increment) to Pinnacle
+    
+    // Wait for status register 0x1E to clear
+    do
+    {
+      RAP_ReadBytes(0x1E, &ERAControlValue, 1);
+    } while(ERAControlValue != 0x00);
+    
+    RAP_ReadBytes(0x1B, data + i, 1);
+    
+    Pinnacle_ClearFlags();
+  }
+}
+
+// Writes a byte, <data>, to an extended register at <address> (16-bit address)
+void ERA_WriteByte(uint16_t address, uint8_t data)
+{
+  uint8_t ERAControlValue = 0xFF;
+
+  Pinnacle_EnableFeed(false); // Disable feed
+
+  RAP_Write(0x1B, data);      // Send data byte to be written
+  
+  RAP_Write(0x1C, (uint8_t)(address >> 8));     // Upper byte of ERA address
+  RAP_Write(0x1D, (uint8_t)(address & 0x00FF)); // Lower byte of ERA address
+
+  RAP_Write(0x1E, 0x02);  // Signal an ERA-write to Pinnacle
+
+  // Wait for status register 0x1E to clear
+  do
+  {
+    RAP_ReadBytes(0x1E, &ERAControlValue, 1);
+  } while(ERAControlValue != 0x00);
+    
+  Pinnacle_ClearFlags();
 }
 
 /*  RAP Functions */
@@ -148,8 +233,56 @@ void RAP_Write(byte address, byte data)
   Wire.endTransmission(true);           // I2C stop condition
 }
 
+/*  Logical Scaling Functions */
+// Clips raw coordinates to "reachable" window of sensor
+// NOTE: values outside this window can only appear as a result of noise
+void ClipCoordinates(absData_t * coordinates)
+{
+  if(coordinates->xValue < PINNACLE_X_LOWER)
+  {
+    coordinates->xValue = PINNACLE_X_LOWER;
+  }
+  else if(coordinates->xValue > PINNACLE_X_UPPER)
+  {
+    coordinates->xValue = PINNACLE_X_UPPER;
+  }
+  if(coordinates->yValue < PINNACLE_Y_LOWER)
+  {
+    coordinates->yValue = PINNACLE_Y_LOWER;
+  }
+  else if(coordinates->yValue > PINNACLE_Y_UPPER)
+  {
+    coordinates->yValue = PINNACLE_Y_UPPER;
+  }
+}
+
+// Scales data to desired X & Y resolution
+void ScaleData(absData_t * coordinates, uint16_t xResolution, uint16_t yResolution)
+{
+  uint32_t xTemp = 0;
+  uint32_t yTemp = 0;
+
+  ClipCoordinates(coordinates);
+
+  xTemp = coordinates->xValue;
+  yTemp = coordinates->yValue;
+  
+  // translate coordinates to (0, 0) reference by subtracting edge-offset
+  xTemp -= PINNACLE_X_LOWER;
+  yTemp -= PINNACLE_Y_LOWER;
+
+  // scale coordinates to (xResolution, yResolution) range
+  coordinates->xValue = (uint16_t)(xTemp * xResolution / PINNACLE_X_RANGE);
+  coordinates->yValue = (uint16_t)(yTemp * yResolution / PINNACLE_Y_RANGE);
+}
+
 /*  I/O Functions */
 bool DR_Asserted()
 {
   return digitalRead(DR_PIN);
+}
+
+void AssertSensorLED(bool state)
+{
+  digitalWrite(LED_0, !state);
 }
