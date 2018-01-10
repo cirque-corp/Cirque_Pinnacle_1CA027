@@ -55,9 +55,10 @@
 // Convenient way to store and access measurements
 typedef struct _absData
 {
-  unsigned int xValue;
-  unsigned int yValue;
-  unsigned int zValue;
+  uint16_t xValue;
+  uint16_t yValue;
+  uint16_t zValue;
+  uint8_t buttonFlags;
   bool touchDown;
 } absData_t;
 
@@ -67,8 +68,8 @@ absData_t touchData;
 void setup()
 {
   Serial.begin(115200);
-  while(!Serial); // needed for USB
-  Serial.println("X\tY\tZ");
+  while(!Serial); // Wait for USB serial port to enumerate
+  Serial.println("X\tY\tZ\tButtons");
 
   pinMode(LED_0, OUTPUT);
   
@@ -87,7 +88,9 @@ void loop()
     Serial.print('\t');
     Serial.print(touchData.yValue);
     Serial.print('\t');
-    Serial.println(touchData.zValue);
+    Serial.print(touchData.zValue);
+    Serial.print('\t');
+    Serial.println(touchData.buttonFlags);
   }
   AssertSensorLED(touchData.touchDown);
 }
@@ -119,14 +122,15 @@ void Pinnacle_Init()
 // Stores result in absData_t struct with xValue, yValue, and zValue members
 void Pinnacle_GetAbsolute(absData_t * result)
 {
-  byte data[4] = { 0,0,0,0 };
-  RAP_ReadBytes(0x14, data, 4);
+  uint8_t data[6] = { 0,0,0,0,0,0 };
+  RAP_ReadBytes(0x12, data, 6);
   
   Pinnacle_ClearFlags();
-  
-  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
-  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3] & 0x3F;
+
+  result->buttonFlags = data[0] & 0x3F;
+  result->xValue = data[2] | ((data[4] & 0x0F) << 8);
+  result->yValue = data[3] | ((data[4] & 0xF0) << 4);
+  result->zValue = data[5] & 0x3F;
 
   result->touchDown = result->xValue != 0;
 }
@@ -210,9 +214,9 @@ void ERA_WriteByte(uint16_t address, uint8_t data)
 
 /*  RAP Functions */
 // Reads <count> Pinnacle registers starting at <address>
-void RAP_ReadBytes(byte address, byte * data, byte count)
+void RAP_ReadBytes(uint8_t address, uint8_t * data, uint8_t count)
 {
-  byte cmdByte = READ_MASK | address;   // Form the READ command byte
+  uint8_t cmdByte = READ_MASK | address;   // Form the READ command byte
 
   SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
   
@@ -220,7 +224,7 @@ void RAP_ReadBytes(byte address, byte * data, byte count)
   SPI.transfer(cmdByte);  // Signal a RAP-read operation starting at <address>
   SPI.transfer(0xFC);     // Filler byte
   SPI.transfer(0xFC);     // Filler byte
-  for(byte i = 0; i < count; i++)
+  for(uint8_t i = 0; i < count; i++)
   {
     data[i] =  SPI.transfer(0xFC);  // Each subsequent SPI transfer gets another register's contents
   }
@@ -230,9 +234,9 @@ void RAP_ReadBytes(byte address, byte * data, byte count)
 }
 
 // Writes single-byte <data> to <address>
-void RAP_Write(byte address, byte data)
+void RAP_Write(uint8_t address, uint8_t data)
 {
-  byte cmdByte = WRITE_MASK | address;  // Form the WRITE command byte
+  uint8_t cmdByte = WRITE_MASK | address;  // Form the WRITE command byte
 
   SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE1));
 
