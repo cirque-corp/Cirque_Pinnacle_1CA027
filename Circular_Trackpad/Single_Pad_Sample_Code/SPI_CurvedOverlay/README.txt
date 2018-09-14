@@ -1,4 +1,4 @@
-Designed for use with SPI TM035035 trackpads fitted with Cirque's curved overlay.
+Designed for use with SPI TM0XX0XX trackpads fitted with Cirque's curved overlay.
 The config parameters used in this sample are optimized for use with REXT = 976k.
 
 Example output from serial terminal:
