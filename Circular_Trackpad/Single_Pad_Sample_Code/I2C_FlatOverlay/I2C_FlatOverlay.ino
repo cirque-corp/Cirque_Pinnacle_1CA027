@@ -1,15 +1,19 @@
+// Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
+
 #include <Wire.h>
 
-// ___ Using a Cirque TM035035 with an Arduino ___
+// ___ Using a Cirque TM0XX0XX with an Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// This application connects to a TM035035 circular touch pad via I2C. To verify that your touch pad is configured
+// When using with DK000013 development kit, connect sensor to the FFC connector
+// labeled 'Sensor0'.
+// This application connects to a TM0XX0XX circular touch pad via I2C. To verify that your touch pad is configured
 // for I2C-mode, make sure that R1 is NOT populated (whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
 // scroll up the window when you touch the sensor. Tools->Serial Monitor can be used to view touch data.
 
-//  Pinnacle TM035035 with Arduino
+//  Pinnacle TM0XX0XX with Arduino
 //  Hardware Interface
 //  GND
 //  +3.3V
@@ -20,7 +24,7 @@
 // Hardware pin-number labels
 #define SDA_PIN   18
 #define SCL_PIN   19
-#define DR_PIN    7
+#define DR_PIN    9
 
 #define LED_0     21
 #define LED_1     20
@@ -88,7 +92,7 @@ void loop()
   AssertSensorLED(touchData.touchDown);
 }
 
-/*  Pinnacle-based TM035035 Functions  */
+/*  Pinnacle-based TM0XX0XX Functions  */
 void Pinnacle_Init()
 {
   // Set up I2C peripheral

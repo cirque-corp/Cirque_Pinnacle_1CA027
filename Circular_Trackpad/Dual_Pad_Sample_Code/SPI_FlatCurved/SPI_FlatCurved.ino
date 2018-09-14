@@ -3,15 +3,15 @@
 #include <SPI.h>
 #include <string.h>
 
-// ___ Using a Cirque TM040040 and TM035035 with a DK-000013-0x and Arduino ___
+// ___ Using a Cirque TM0XX0XX and TM0XX0XX with a DK-000013-0x and Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// This application connects to a TM040040 (Sensor0) and TM035035 (Sensor1) circular touch pad via SPI. 
+// This application connects to a TM0XX0XX (Sensor0) and TM0XX0XX (Sensor1) circular touch pad via SPI. 
 // To verify that your touch pad is configured for SPI-mode, make sure that R1 is populated with a 470k resistor
 // (or whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
-// fill the window when you touch the sensor. 
+// fill the window when you touch the sensor.
 // In the Arduino IDE use Tools->Serial Monitor to view touch data.
 // This demo can use both sensor ports on the 02-000620-00REVA00 development board.
 // You can configure which sensors are active using the SENSE0_SELECT and SENSE0_SELECT shown below.
@@ -19,7 +19,7 @@
 
 // NOTE: all config values applied in this sample are meant for a module using REXT = 976kOhm
 
-//  Pinnacle TM040040 with Arduino
+//  Pinnacle TM0XX0XX with Arduino
 //  Hardware Interface
 //  GND
 //  +3.3V
@@ -180,7 +180,7 @@ void loop()
 
   // Note: the two Pinnacles are not synchronized. In a polling loop like this you
   // may get one or both of the sensors reporting new data. We just grab what data
-  // there is and write it. 
+  // there is and write it.
   if(DR_Asserted(&Pad_Sense0) && SENSE0_SELECT)
   {
 
@@ -378,9 +378,9 @@ void tuneEdgeSensitivity(padData_t * currPad)
 
 // This function identifies when a finger is "hovering" so your system can choose to ignore it.
 // The sensor detects the finger in the space above the sensor. If the finger is on the surface of the sensor the Z value is highest.
-// If the finger is a few millimeters above the surface the z value is much lower. 
+// If the finger is a few millimeters above the surface the z value is much lower.
 // Adding a curved overlay will allow the finger to be closer in the middle (so a higher z value) but farther
-// on the perimeter (so a lower z value). 
+// on the perimeter (so a lower z value).
 // With a curved overlay you tune the gain of the system to see a finger on the perimeter of the sensor
 // (the finger is farther away).  Unfortunately a finger near the center will be detected above the surface.
 // This code will tell you when to ignore that "hovering" finger.

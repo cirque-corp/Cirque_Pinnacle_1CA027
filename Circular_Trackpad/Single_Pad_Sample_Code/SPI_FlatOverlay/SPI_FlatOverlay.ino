@@ -1,30 +1,34 @@
+// Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
+
 #include <SPI.h>
 
-// ___ Using a Cirque TM035035 with an Arduino ___
+// ___ Using a Cirque TM0XX0XX with an Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// This application connects to a TM035035 circular touch pad via SPI. To verify that your touch pad is configured
+// When using with DK000013 development kit, connect sensor to the FFC connector
+// labeled 'Sensor0'.
+// This application connects to a TM0XX0XX circular touch pad via SPI. To verify that your touch pad is configured
 // for SPI-mode, make sure that R1 is populated with a 470k resistor (or whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
 // scroll up the window when you touch the sensor. Tools->Serial Monitor can be used to view touch data.
 
-//  Pinnacle TM035035 with Arduino
+//  Pinnacle TM0XX0XX with Arduino
 //  Hardware Interface
 //  GND
 //  +3.3V
 //  SCK = Pin 13
 //  MISO = Pin 12
 //  MOSI = Pin 11
-//  SS = Pin 18
-//  DR = Pin 7
+//  SS = Pin 10
+//  DR = Pin 9
 
 // Hardware pin-number labels
 #define SCK_PIN   13
 #define DIN_PIN   12
 #define DOUT_PIN  11
-#define CS_PIN    8
-#define DR_PIN    7
+#define CS_PIN    10
+#define DR_PIN    9
 
 #define SDA_PIN   18
 #define SCL_PIN   19
@@ -92,7 +96,7 @@ void loop()
   AssertSensorLED(touchData.touchDown);
 }
 
-/*  Pinnacle-based TM035035 Functions  */
+/*  Pinnacle-based TM0XX0XX Functions  */
 void Pinnacle_Init()
 {
   DeAssert_CS();

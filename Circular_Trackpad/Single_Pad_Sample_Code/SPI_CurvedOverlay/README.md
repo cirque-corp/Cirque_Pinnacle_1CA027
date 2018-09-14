@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
+
 Designed for use with SPI TM0XX0XX trackpads fitted with Cirque's curved overlay.
 The config parameters used in this sample are optimized for use with REXT = 976k.
 
