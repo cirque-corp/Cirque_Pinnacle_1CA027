@@ -9,7 +9,7 @@ hardware reports raw ADC data. It is the lowest level of device configuration
 available on from the Touchpad. This differs from the default operation
 (Absolute Mode: data represents x, y and z positions detected by the touchpad)
 which calculates the reported position from multiple measurements.
-----------------------------------------------------------------------------------------------------------------------
+
 ### AnyMeas Uses
 
 The touchpad is designed by using a grid of electrodes. In AnyMeas mode each
@@ -17,7 +17,7 @@ each axis position can be activated individually. This mode gives developers
 the greatest freedom of device configuration and measurement.
 
 Custom compensation matrices can be quickly configured and tested, along with other application specific measurements and configurations. 
-----------------------------------------------------------------------------------------------------------------------
+
 ### Sample Program Output
 
     Initial Test
