@@ -1,4 +1,8 @@
-// Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
+# Dual Touchpad Example Code
+
+Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
+
+### Overview
 
 This project shows how to use the TM040040 (Sensor0) and TM035035 (Sensor1)
 devices at the same time on the DK-000013 demo kit.
@@ -17,7 +21,7 @@ Flat Operation:
     #define SENSE0_OVERLAY_CURVE  0
     #define SENSE1_OVERLAY_CURVE  0
 
-Example output from serial terminal:
+### Example output from serial terminal:
 
     Pinnacle Initialized...
     Pinnacle Initialized...
