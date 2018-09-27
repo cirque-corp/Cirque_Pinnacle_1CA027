@@ -1,4 +1,4 @@
-Circular Touchpads
+# Circular Touchpads
 
 The circular touch pad demo-code was designed and tested using the Development Kit
 available by following the link https://www.cirque.com/circle-trackpad-dev-kit.
@@ -12,7 +12,7 @@ the single touchpad and use the Arduino Serial Monitor to display the results.
 The programs located in the Dual_Pad_Sample_Code are similar to the single pad
 programs, but will display touch data from both touchpads.
 
-Hardware Controlled Options:
+### Hardware Controlled Options:
 
 Depending on the application, the pinnacle device can be configured to communicate
 via SPI or I2C. IF YOUR DEVICE IS NOT CONFIGURED FOR THE PROTOCOL YOU ARE USING
