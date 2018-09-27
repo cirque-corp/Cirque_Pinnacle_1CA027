@@ -6,7 +6,7 @@
 // ___ Using a Cirque TM0XX0XX and TM0XX0XX with a DK-000013-0x and Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// This application connects to a TM0XX0XX (Sensor0) and TM0XX0XX (Sensor1) circular touch pad via SPI. 
+// This application connects to a TM0XX0XX (Sensor0) and TM0XX0XX (Sensor1) circular touch pad via SPI.
 // To verify that your touch pad is configured for SPI-mode, make sure that R1 is populated with a 470k resistor
 // (or whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
@@ -54,7 +54,7 @@
 
 // Register config values for this demo
 #define SYSCONFIG_1   0x00
-#define FEEDCONFIG_1  0x03
+#define FEEDCONFIG_1  0x02
 #define FEEDCONFIG_2  0x1F
 #define Z_IDLE_COUNT  0x05
 
@@ -82,6 +82,8 @@
 #define ADC_ATTENUATE_3X   0x80
 #define ADC_ATTENUATE_4X   0xC0
 
+#define ADC_LOWER_DEFAULT  0x02
+
 // Select sensors that are active
 // 1 = On, 0 = Off
 #define SENSE0_SELECT         1
@@ -90,6 +92,8 @@
 // 1 = Curved Overlay, 0 = Flat Overlay
 #define SENSE0_OVERLAY_CURVE  1
 #define SENSE1_OVERLAY_CURVE  1
+
+#define DEFAULT_WRITE_DELAY 50
 
 // Convenient way to store and access measurements
 typedef struct _absData
@@ -131,7 +135,7 @@ const uint8_t ZVALUE_MAP[ROWS_Y][COLS_X] =
 // setup() gets called once at power-up, sets up serial debug output and Cirque's Pinnacle ASIC.
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while(!Serial); // needed for USB
   String str = "";
 
@@ -154,12 +158,14 @@ void setup()
   {
     setAdcAttenuation(ADC_ATTENUATE_2X, &Pad_Sense0);
     tuneEdgeSensitivity(&Pad_Sense0);
+    Pinnacle_forceCalibration(&Pad_Sense0);
   }
 
   if(SENSE1_OVERLAY_CURVE)
   {
     setAdcAttenuation(ADC_ATTENUATE_2X, &Pad_Sense1);
-    tuneEdgeSensitivity(&Pad_Sense0);
+    tuneEdgeSensitivity(&Pad_Sense1);
+    Pinnacle_forceCalibration(&Pad_Sense1);
   }
 
   Serial.println();
@@ -183,31 +189,26 @@ void loop()
   // there is and write it.
   if(DR_Asserted(&Pad_Sense0) && SENSE0_SELECT)
   {
-
     Pinnacle_GetAbsolute(&touchData_Sense0, &Pad_Sense0);
-
     Pinnacle_CheckValidTouch(&touchData_Sense0);     // Checks for "hover" caused by curved overlays
-
     ScaleData(&touchData_Sense0, 1024, 1024);      // Scale coordinates to arbitrary X, Y resolution
 
     printData += "SENS_0 ";
 
-    Pinnacle_DataToString(&touchData_Sense0, &printData);
+    Pinnacle_DataToString(&touchData_Sense0, &printData, SENSE0_OVERLAY_CURVE);
   }
 
   if(DR_Asserted(&Pad_Sense1) && SENSE1_SELECT)
   {
     Pinnacle_GetAbsolute(&touchData_Sense1, &Pad_Sense1);
-
     Pinnacle_CheckValidTouch(&touchData_Sense1);     // Checks for "hover" caused by curved overlays
-
     ScaleData(&touchData_Sense1, 1024, 1024);      // Scale coordinates to arbitrary X, Y resolution
 
     printData += (SENSE0_SELECT && printData.length() == 0) ? ("\t\t\t\tSENS_1 ") :
       (SENSE0_SELECT) ? "\tSENS_1 " :
        "SENS_1 ";
 
-    Pinnacle_DataToString(&touchData_Sense1, &printData);
+    Pinnacle_DataToString(&touchData_Sense1, &printData, SENSE1_OVERLAY_CURVE);
   }
 
   if (printData.length() != 0)
@@ -222,26 +223,28 @@ void loop()
 }
 
 // General Print function to display the parameters
-void Pinnacle_DataToString(absData_t * touchData, String * str)
+void Pinnacle_DataToString(absData_t * touchData, String * str, bool curve)
 {
   str->concat(String(touchData->xValue));
   str->concat("\t");
   str->concat(String(touchData->yValue));
   str->concat("\t");
   str->concat(String(touchData->zValue));
-  str->concat("-");
 
-  if(Pinnacle_zIdlePacket(touchData))
+  if(curve)
   {
-    str->concat("L ");       // append 'Liftoff' code to end of string
-  }
-  else if(touchData->hovering)
-  {
-    str->concat("H ");      // append 'Hover' code to end of string
-  }
-  else
-  {
-    str->concat("V ");      // append 'Valid' code to end of string
+      if(Pinnacle_zIdlePacket(touchData))
+      {
+        str->concat("-L ");       // append 'Liftoff' code to end of string
+      }
+      else if(touchData->hovering)
+      {
+        str->concat("-H ");      // append 'Hover' code to end of string
+      }
+      else
+      {
+        str->concat("-V ");      // append 'Valid' code to end of string
+      }
   }
 }
 
@@ -283,6 +286,26 @@ void Pinnacle_GetAbsolute(absData_t * result, padData_t * currPad)
   result->touchDown = result->xValue != 0;
 }
 
+// Forces Pinnacle to re-calibrate, sometimes useful when miss-compensation
+// causes touchpad to miss real touches or false touches are tringgering touch events
+void Pinnacle_forceCalibration(padData_t * currPad)
+{
+  uint8_t CalConfig1Value = 0x00;
+
+  Pinnacle_EnableFeed(false, currPad);
+  RAP_ReadBytes(0x07, &CalConfig1Value, 1, currPad->CS_Pin);
+  CalConfig1Value |= 0x01;
+  RAP_Write(0x07, CalConfig1Value, currPad->CS_Pin);
+
+  do
+  {
+    RAP_ReadBytes(0x07, &CalConfig1Value, 1, currPad->CS_Pin);
+  }
+  while(CalConfig1Value & 0x01);
+
+  Pinnacle_ClearFlags(currPad);
+}
+
 // Checks touch data to see if it is a z-idle packet (all zeros)
 bool Pinnacle_zIdlePacket(absData_t * data)
 {
@@ -293,7 +316,6 @@ bool Pinnacle_zIdlePacket(absData_t * data)
 void Pinnacle_ClearFlags(padData_t * currPad)
 {
   RAP_Write(0x02, 0x00, currPad->CS_Pin);
-  delayMicroseconds(50);
 }
 
 // Enables/Disables the feed
@@ -323,15 +345,22 @@ void setAdcAttenuation(uint8_t adcGain, padData_t * currPad)
   uint8_t temp = 0x00;
 
   Serial.println();
-  Serial.println("Setting ADC gain...");
+  Serial.println("Setting ADC Gain...");
+
   ERA_ReadBytes(0x0187, &temp, 1, currPad);
-  temp &= 0x3F; // clear top two bits
-  temp |= adcGain;
+
+  Serial.print("Current value:\t");
+  Serial.println(temp, HEX);
+
+  temp &= 0x3F;         // clear top two bits
+  temp |= adcGain;      // set top two bits to the desired ADC Gain Value
   ERA_WriteByte(0x0187, temp, currPad);
   ERA_ReadBytes(0x0187, &temp, 1, currPad);
-  Serial.print("ADC gain set to:\t");
-  Serial.print(temp &= 0xC0, HEX);
-  switch(temp)
+
+  Serial.print("New value:\t");
+  Serial.print(temp, HEX);
+
+  switch(adcGain)
   {
     case ADC_ATTENUATE_1X:
       Serial.println(" (X/1)");
@@ -401,7 +430,6 @@ void Pinnacle_CheckValidTouch(absData_t * touchData)
 void ERA_ReadBytes(uint16_t address, uint8_t * data, uint16_t count, padData_t * currPad)
 {
   uint8_t ERAControlValue = 0xFF;
-
   Pinnacle_EnableFeed(false, currPad); // Disable feed
 
   RAP_Write(0x1C, (uint8_t)(address >> 8), currPad->CS_Pin);     // Send upper byte of ERA address
@@ -417,8 +445,8 @@ void ERA_ReadBytes(uint16_t address, uint8_t * data, uint16_t count, padData_t *
       RAP_ReadBytes(0x1E, &ERAControlValue, 1, currPad->CS_Pin);
     } while(ERAControlValue != 0x00);
 
+    // Read register to verify that the new value is there.
     RAP_ReadBytes(0x1B, data + i, 1, currPad->CS_Pin);
-
     Pinnacle_ClearFlags(currPad);
   }
 }
@@ -427,7 +455,6 @@ void ERA_ReadBytes(uint16_t address, uint8_t * data, uint16_t count, padData_t *
 void ERA_WriteByte(uint16_t address, uint8_t data, padData_t * currPad)
 {
   uint8_t ERAControlValue = 0xFF;
-
   Pinnacle_EnableFeed(false, currPad); // Disable feed
 
   RAP_Write(0x1B, data, currPad->CS_Pin);      // Send data byte to be written
@@ -443,6 +470,7 @@ void ERA_WriteByte(uint16_t address, uint8_t data, padData_t * currPad)
     RAP_ReadBytes(0x1E, &ERAControlValue, 1, currPad->CS_Pin);
   } while(ERAControlValue != 0x00);
 
+  delayMicroseconds(DEFAULT_WRITE_DELAY);
   Pinnacle_ClearFlags(currPad);
 }
 
@@ -487,6 +515,7 @@ void RAP_Write(byte address, byte data, uint8_t currCSPin)
   DeAssert_CS(currCSPin);
 
   SPI.endTransaction();
+  delayMicroseconds(DEFAULT_WRITE_DELAY);
 }
 
 /*  Logical Scaling Functions */
