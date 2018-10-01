@@ -5,7 +5,9 @@ Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-licen
 ### Overview
 
 This project shows how to use the TM040040 (Sensor0) and TM035035 (Sensor1)
-devices at the same time on the DK-000013 demo kit.
+devices at the same time on the DK-000013 demo kit. This is the code that ships
+with the device, so if you would like to return your demo kit to it's original
+state upload this code to the device. 
 
 Curved Operation:
     For use with the curved overlay optimization, define the OVERLAY_CURVE
