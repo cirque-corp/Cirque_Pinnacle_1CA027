@@ -1,14 +1,14 @@
-#Pinnacle Command Panel Demo
+# Pinnacle Command Panel Demo
 Copyright (c) 2018 Cirque Corp. Restrictions apply. See: www.cirque.com/sw-license
 
-###Overview:
+### Overview:
 This is a sample Arduino program that displays sensor data from track pad
 to the Serial Monitor. It is an advanced version of the simple TM040040/TM035035
 demo that abstracts all the Pinnacle features into simple functions that can be
 from a basic text controlled menu on the serial monitor and can be used in other
 embedded applications (see Pinnacle.h and Pinnacle.c).
 
-###Menu:
+### Menu:
 The program outputs a simple menu to the serial monitor at the start up of the
 program. Entering the associated character will activate or disable the listed feature. For more information, see the descriptions below.
 
@@ -52,7 +52,7 @@ program. Entering the associated character will activate or disable the listed f
 **l - list these commands again**
     This simply lists the available commands in the menu.
 
-###Example Output from Serial Monitor:
+### Example Output from Serial Monitor:
 
 '   Commands:
     a - set to absolute mode
@@ -82,7 +82,7 @@ program. Entering the associated character will activate or disable the listed f
     SENS_0 1533	637	63		SENS_1 1698	627	12	0
     SENS_0 1562	674	63		SENS_1 1736	658	10	0'
 
-###Troubleshooting:
+### Troubleshooting:
 
 1. Ensure the device is connected to the computer via the USB cable provided. If
 the device is connected, try disconnecting, waiting 10 seconds and reconnecting
