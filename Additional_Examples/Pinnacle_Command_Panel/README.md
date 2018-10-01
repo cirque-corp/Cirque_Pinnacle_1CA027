@@ -54,7 +54,7 @@ program. Entering the associated character will activate or disable the listed f
 
 ### Example Output from Serial Monitor:
 
-'   Commands:
+`   Commands:
     a - set to absolute mode
     c - force sensor to recalibrate
     d - disable the feed
@@ -80,7 +80,7 @@ program. Entering the associated character will activate or disable the listed f
     SENS_0 1460	561	63		SENS_1 1684	603	14	0
     SENS_0 1500	598	62		SENS_1 1680	611	13	0
     SENS_0 1533	637	63		SENS_1 1698	627	12	0
-    SENS_0 1562	674	63		SENS_1 1736	658	10	0'
+    SENS_0 1562	674	63		SENS_1 1736	658	10	0`
 
 ### Troubleshooting:
 
