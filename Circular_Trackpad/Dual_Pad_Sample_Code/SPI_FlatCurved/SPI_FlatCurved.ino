@@ -101,6 +101,7 @@ typedef struct _absData
   uint16_t xValue;
   uint16_t yValue;
   uint16_t zValue;
+  uint8_t buttonFlags;
   bool touchDown;
   bool hovering;
 } absData_t;
@@ -169,9 +170,9 @@ void setup()
   }
 
   Serial.println();
-  str = (SENSE1_SELECT && SENSE0_SELECT) ? ("\tX\tY\tZ\t\tX\tY\tZ") :
+  str = (SENSE1_SELECT && SENSE0_SELECT) ? ("\tX\tY\tZ\t\t\tX\tY\tZ\tBTN") :
     (SENSE1_SELECT) ? ("SENSE 1\tX\tY\tZ") :
-    (SENSE0_SELECT) ? ("SENSE 0\tX\tY\tZ") :
+    (SENSE0_SELECT) ? ("SENSE 0\tX\tY\tZ\tBTN") :
     ("BOTH SENSORS DISABLED .. ENABLE SENSOR SELECT");
   Serial.println(str);
 
@@ -196,6 +197,11 @@ void loop()
     printData += "SENS_0 ";
 
     Pinnacle_DataToString(&touchData_Sense0, &printData, SENSE0_OVERLAY_CURVE);
+    
+    if(SENSE1_SELECT && !DR_Asserted(&Pad_Sense1))
+    {
+      printData += "\t\t\t\t\t\t" + String(touchData_Sense0.buttonFlags);
+    }
   }
 
   if(DR_Asserted(&Pad_Sense1) && SENSE1_SELECT)
@@ -204,11 +210,12 @@ void loop()
     Pinnacle_CheckValidTouch(&touchData_Sense1);     // Checks for "hover" caused by curved overlays
     ScaleData(&touchData_Sense1, 1024, 1024);      // Scale coordinates to arbitrary X, Y resolution
 
-    printData += (SENSE0_SELECT && printData.length() == 0) ? ("\t\t\t\tSENS_1 ") :
-      (SENSE0_SELECT) ? "\tSENS_1 " :
+    printData += (SENSE0_SELECT && printData.length() == 0) ? ("\t\t\t\t\tSENS_1 ") :
+      (SENSE0_SELECT) ? "\t\tSENS_1 " :
        "SENS_1 ";
 
     Pinnacle_DataToString(&touchData_Sense1, &printData, SENSE1_OVERLAY_CURVE);
+    printData += "\t" + String(touchData_Sense0.buttonFlags);
   }
 
   if (printData.length() != 0)
@@ -274,14 +281,15 @@ void Pinnacle_Init(padData_t * currPad)
 // Stores result in absData_t struct with xValue, yValue, and zValue members
 void Pinnacle_GetAbsolute(absData_t * result, padData_t * currPad)
 {
-  uint8_t data[4] = { 0,0,0,0 };
-  RAP_ReadBytes(0x14, data, 4, currPad->CS_Pin);
+  uint8_t data[6] = { 0,0,0,0,0,0 };
+  RAP_ReadBytes(0x12, data, 6, currPad->CS_Pin);
 
   Pinnacle_ClearFlags(currPad);
 
-  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
-  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3] & 0x3F;  // mask off upper two bits (reserved functionality)
+  result->buttonFlags = data[0] & 0x3F;
+  result->xValue = data[2] | ((data[4] & 0x0F) << 8);
+  result->yValue = data[3] | ((data[4] & 0xF0) << 4);
+  result->zValue = data[5] & 0x3F;
 
   result->touchDown = result->xValue != 0;
 }
