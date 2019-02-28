@@ -2,24 +2,22 @@
 
 #include <Wire.h>
 
-// ___ Using a Cirque TM0XX0XX with an Arduino ___
+// ___ Using a Cirque TM040040 with an Arduino ___
 // This demonstration application is built to work with a Teensy 3.1/3.2 but it can easily be adapted to
 // work with Arduino-based systems.
-// When using with DK000013 development kit, connect sensor to the FFC connector
-// labeled 'Sensor0'.
-// This application connects to a TM0XX0XX circular touch pad via I2C. To verify that your touch pad is configured
+// This application connects to a TM040040 circular touch pad via I2C. To verify that your touch pad is configured 
 // for I2C-mode, make sure that R1 is NOT populated (whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
 // scroll up the window when you touch the sensor. Tools->Serial Monitor can be used to view touch data.
 
-//  Pinnacle TM0XX0XX with Arduino
+//  Pinnacle TM040040 with Arduino
 //  Hardware Interface
 //  GND
 //  +3.3V
 //  SDA = Pin 18  (there MUST be a pull-up to 3.3V on this signal; 4.7k recommended)
 //  SCL = Pin 19  (there MUST be a pull-up to 3.3V on this signal; 4.7k recommended)
-//  DR = Pin 7
+//  DR = Pin 9
 
 // Hardware pin-number labels
 #define SDA_PIN   18
@@ -55,9 +53,10 @@
 // Convenient way to store and access measurements
 typedef struct _absData
 {
-  unsigned int xValue;
-  unsigned int yValue;
-  unsigned int zValue;
+  uint16_t xValue;
+  uint16_t yValue;
+  uint16_t zValue;
+  uint8_t buttonFlags;
   bool touchDown;
 } absData_t;
 
@@ -68,7 +67,7 @@ void setup()
 {
   Serial.begin(115200);
   while(!Serial); // needed for USB
-  Serial.println("X\tY\tZ");
+  Serial.println("X\tY\tZ\tButtons");
 
   pinMode(LED_0, OUTPUT);
 
@@ -79,20 +78,22 @@ void setup()
 void loop()
 {
   if(DR_Asserted())
-  {
+  {    
     Pinnacle_GetAbsolute(&touchData);
 //    ScaleData(&touchData, 1024, 1024);  // Scale coordinates to arbitrary X, Y resolution
-
+          
     Serial.print(touchData.xValue);
     Serial.print('\t');
     Serial.print(touchData.yValue);
     Serial.print('\t');
-    Serial.println(touchData.zValue);
+    Serial.print(touchData.zValue);
+    Serial.print('\t');
+    Serial.println(touchData.buttonFlags);
   }
   AssertSensorLED(touchData.touchDown);
 }
 
-/*  Pinnacle-based TM0XX0XX Functions  */
+/*  Pinnacle-based TM040040 Functions  */
 void Pinnacle_Init()
 {
   // Set up I2C peripheral
@@ -119,14 +120,15 @@ void Pinnacle_Init()
 // Stores result in absData_t struct with xValue, yValue, and zValue members
 void Pinnacle_GetAbsolute(absData_t * result)
 {
-  byte data[4] = { 0,0,0,0 };
-  RAP_ReadBytes(0x14, data, 4);
-
+  uint8_t data[6] = { 0,0,0,0,0,0 };
+  RAP_ReadBytes(0x12, data, 6);
+  
   Pinnacle_ClearFlags();
-
-  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
-  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3] & 0x3F;
+  
+  result->buttonFlags = data[0] & 0x3F;
+  result->xValue = data[2] | ((data[4] & 0x0F) << 8);
+  result->yValue = data[3] | ((data[4] & 0xF0) << 4);
+  result->zValue = data[5] & 0x3F;
 
   result->touchDown = result->xValue != 0;
 }
@@ -144,7 +146,7 @@ void Pinnacle_EnableFeed(bool feedEnable)
   uint8_t temp;
 
   RAP_ReadBytes(0x04, &temp, 1);  // Store contents of FeedConfig1 register
-
+  
   if(feedEnable)
   {
     temp |= 0x01;                 // Set Feed Enable bit
@@ -161,26 +163,26 @@ void Pinnacle_EnableFeed(bool feedEnable)
 // Reads <count> bytes from an extended register at <address> (16-bit address),
 // stores values in <*data>
 void ERA_ReadBytes(uint16_t address, uint8_t * data, uint16_t count)
-{
+{  
   uint8_t ERAControlValue = 0xFF;
 
   Pinnacle_EnableFeed(false); // Disable feed
 
   RAP_Write(0x1C, (uint8_t)(address >> 8));     // Send upper byte of ERA address
   RAP_Write(0x1D, (uint8_t)(address & 0x00FF)); // Send lower byte of ERA address
-
+  
   for(uint16_t i = 0; i < count; i++)
   {
     RAP_Write(0x1E, 0x05);  // Signal ERA-read (auto-increment) to Pinnacle
-
+    
     // Wait for status register 0x1E to clear
     do
     {
       RAP_ReadBytes(0x1E, &ERAControlValue, 1);
     } while(ERAControlValue != 0x00);
-
+    
     RAP_ReadBytes(0x1B, data + i, 1);
-
+    
     Pinnacle_ClearFlags();
   }
 }
@@ -193,7 +195,7 @@ void ERA_WriteByte(uint16_t address, uint8_t data)
   Pinnacle_EnableFeed(false); // Disable feed
 
   RAP_Write(0x1B, data);      // Send data byte to be written
-
+  
   RAP_Write(0x1C, (uint8_t)(address >> 8));     // Upper byte of ERA address
   RAP_Write(0x1D, (uint8_t)(address & 0x00FF)); // Lower byte of ERA address
 
@@ -204,22 +206,22 @@ void ERA_WriteByte(uint16_t address, uint8_t data)
   {
     RAP_ReadBytes(0x1E, &ERAControlValue, 1);
   } while(ERAControlValue != 0x00);
-
+    
   Pinnacle_ClearFlags();
 }
 
 /*  RAP Functions */
 // Reads <count> Pinnacle registers starting at <address>
-void RAP_ReadBytes(byte address, byte * data, byte count)
+void RAP_ReadBytes(uint8_t address, uint8_t * data, uint8_t count)
 {
-  byte cmdByte = READ_MASK | address;   // Form the READ command byte
-  byte i = 0;
+  uint8_t cmdByte = READ_MASK | address;   // Form the READ command byte
+  uint8_t i = 0;
 
   Wire.beginTransmission(SLAVE_ADDR);   // Set up an I2C-write to the I2C slave (Pinnacle)
   Wire.write(cmdByte);                  // Signal a RAP-read operation starting at <address>
   Wire.endTransmission(true);           // I2C stop condition
 
-  Wire.requestFrom((byte)SLAVE_ADDR, count, (byte)true);  // Read <count> bytes from I2C slave
+  Wire.requestFrom((uint8_t)SLAVE_ADDR, count, (uint8_t)true);  // Read <count> bytes from I2C slave
   while(Wire.available())
   {
     data[i++] = Wire.read();
@@ -227,9 +229,9 @@ void RAP_ReadBytes(byte address, byte * data, byte count)
 }
 
 // Writes single-byte <data> to <address>
-void RAP_Write(byte address, byte data)
+void RAP_Write(uint8_t address, uint8_t data)
 {
-  byte cmdByte = WRITE_MASK | address;  // Form the WRITE command byte
+  uint8_t cmdByte = WRITE_MASK | address;  // Form the WRITE command byte
 
   Wire.beginTransmission(SLAVE_ADDR);   // Set up an I2C-write to the I2C slave (Pinnacle)
   Wire.send(cmdByte);                   // Signal a RAP-write operation at <address>
@@ -270,7 +272,7 @@ void ScaleData(absData_t * coordinates, uint16_t xResolution, uint16_t yResoluti
 
   xTemp = coordinates->xValue;
   yTemp = coordinates->yValue;
-
+  
   // translate coordinates to (0, 0) reference by subtracting edge-offset
   xTemp -= PINNACLE_X_LOWER;
   yTemp -= PINNACLE_Y_LOWER;
