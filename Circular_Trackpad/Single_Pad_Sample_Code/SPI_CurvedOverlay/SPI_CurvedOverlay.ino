@@ -73,6 +73,7 @@ typedef struct _absData
   uint16_t xValue;
   uint16_t yValue;
   uint16_t zValue;
+  uint8_t buttonFlags;
   bool touchDown;
   bool hovering;
 } absData_t;
@@ -111,7 +112,7 @@ void setup()
   tuneEdgeSensitivity();
 
   Serial.println();
-  Serial.println("X\tY\tZ\tData");
+  Serial.println("X\tY\tZ\tBtn\tData");
   Pinnacle_EnableFeed(true);
 }
 
@@ -130,6 +131,8 @@ void loop()
     Serial.print(touchData.yValue);
     Serial.print('\t');
     Serial.print(touchData.zValue);
+    Serial.print('\t');
+    Serial.print(touchData.buttonFlags);
     Serial.print('\t');
     if(Pinnacle_zIdlePacket(&touchData))
     {
@@ -173,14 +176,15 @@ void Pinnacle_Init()
 // Stores result in absData_t struct with xValue, yValue, and zValue members
 void Pinnacle_GetAbsolute(absData_t * result)
 {
-  uint8_t data[4] = { 0,0,0,0 };
-  RAP_ReadBytes(0x14, data, 4);
+  uint8_t data[6] = { 0,0,0,0,0,0 };
+  RAP_ReadBytes(0x12, data, 6);
 
   Pinnacle_ClearFlags();
 
-  result->xValue = data[0] | ((data[2] & 0x0F) << 8);
-  result->yValue = data[1] | ((data[2] & 0xF0) << 4);
-  result->zValue = data[3] & 0x3F;  // mask off upper two bits (reserved functionality)
+  result->buttonFlags = data[0] & 0x3F;
+  result->xValue = data[2] | ((data[4] & 0x0F) << 8);
+  result->yValue = data[3] | ((data[4] & 0xF0) << 4);
+  result->zValue = data[5] & 0x3F;
 
   result->touchDown = result->xValue != 0;
 }
