@@ -7,8 +7,8 @@
 // work with Arduino-based systems.
 // When using with DK000013 development kit, connect sensor to the FFC connector
 // labeled 'Sensor0'.
-// This application connects to a TM0XX0XX circular touch pad via SPI. To verify that your touch pad is configured
-// for SPI-mode, make sure that R1 is populated with a 470k resistor (or whichever resistor connects pins 24 & 25 of the 1CA027 IC).
+// This application connects to a TM0XX0XX circular touch pad via I2C. To verify that your touch pad is configured
+// for I2C-mode, make sure that R1 is populated with a 470k resistor (or whichever resistor connects pins 24 & 25 of the 1CA027 IC).
 // The pad is configured for Absolute mode tracking.  Touch data is sent in text format over USB CDC to
 // the host PC.  You can open a terminal window on the PC to the USB CDC port and see X, Y, and Z data
 // fill the window when you touch the sensor. Tools->Serial Monitor can be used to view touch data.
