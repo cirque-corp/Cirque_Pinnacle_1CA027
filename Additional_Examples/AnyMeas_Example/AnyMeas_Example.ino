@@ -133,7 +133,7 @@ void Pinnacle_Init()
   Pinnacle_ClearFlags();
   //disable tracking
   //This stops XY tracking measurements and allows us to be able to do any unique measurement.
-  RAP_Write(HOSTREG__SYSCONFIG1__TRACK_DISABLE,HOSTREG__SYSCONFIG1);
+  RAP_Write(HOSTREG__SYSCONFIG1,HOSTREG__SYSCONFIG1__TRACK_DISABLE);
   //Delay 10ms after the initial track disable to allow all tracking operations to complete.  
   delayMicroseconds(10000);
   PinnacleADC_Init();  
