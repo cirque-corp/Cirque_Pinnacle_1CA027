@@ -43,5 +43,5 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to Jon (jonb@cirque.com) or Nolan (nolan.mcculloch@cirque.com).
+Zip up your project and email it to Jon (jonb@cirque.com), Todd (todd.rich@cirque.com) or Nolan (nolan.mcculloch@cirque.com).
 
