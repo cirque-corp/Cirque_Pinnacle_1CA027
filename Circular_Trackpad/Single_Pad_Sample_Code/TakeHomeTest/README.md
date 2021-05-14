@@ -23,6 +23,9 @@ The test can be broken up into the following tasks.
     2. When a touch appears in a quadrant, stays in that quadrant, and leaves within 300 msec then report a "tap in a quadrant" by printing to the serial port Qx. Where X is the quadrant number (0..3).
 5. Send the code in for review
 
+Here is a link to a completed test and how it it is intended to function. 
+[Passing Test Video](https://youtu.be/9J7DOaGZC1g)
+
 ## Helpful Links
 
 You can use any text editor you want, but the Arduino IDE will be able to build
@@ -30,7 +33,15 @@ and update firmware on the Teensy when you are ready to test. You will need to
 install Arduino IDE and the Teensyduino software to be able to build and run the
 project. 
 
+All the sample code uses default libraries from Arduino and Teensyduino. If you are have questions about the objects being used, look for answers on the Arduino
+and Teensy documentation and examples. 
+
 * [Arduino IDE](https://www.arduino.cc/en/software)
 * [Teensyduino](https://www.pjrc.com/teensy/td_download.html)
 * [Demo Kit Git Repo](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027)
 * [Cirque Circle Trackpad Development Kit](https://www.cirque.com/circle-trackpad-dev-kit)
+
+## Finishing the Test
+
+Zip up your project and email it to Jon (jonb@cirque.com) or Nolan (nolan.mcculloch@cirque.com).
+
