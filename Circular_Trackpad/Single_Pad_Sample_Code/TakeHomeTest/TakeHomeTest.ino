@@ -81,7 +81,6 @@ typedef struct _absData
 } absData_t;
 
 absData_t touchData;
-absData_t originData;
 
 //const uint16_t ZONESCALE = 256;
 //const uint16_t ROWS_Y = 6;
@@ -100,24 +99,15 @@ const uint8_t ZVALUE_MAP[ROWS_Y][COLS_X] =
         {0, 0, 0, 0, 0, 0, 0, 0},
 };
 
-enum class TapState_t : uint8_t
-{
-    IDLE,
-    ACTIVE_TAP,
-    CONFIRM_TAP,
-    INVALID_TAP
-};
-TapState_t mCurrState;
-
-uint32_t mTouchDownTime; 
 // setup() gets called once at power-up, sets up serial debug output and Cirque's Pinnacle ASIC.
 void setup()
 {
   Serial.begin(115200);
   while(!Serial); // Wait for USB serial port to enumerate
 
-  mCurrState = TapState_t::IDLE;
-  mTouchDownTime; 
+/*******************************************************************************
+ * YOUR STARTUP CODE HERE
+ ******************************************************************************/
 
   pinMode(LED_0, OUTPUT);
   
@@ -135,85 +125,9 @@ void setup()
 // loop() continuously checks to see if data-ready (DR) is high. If so, reads and reports touch data to terminal.
 void loop()
 {
-    bool drAsserted = DR_Asserted(); 
-
-    switch ((uint8_t)mCurrState)
-    {
-    case (uint8_t)TapState_t::IDLE:
-    {
-        if(drAsserted)
-        {
-            Pinnacle_GetAbsolute(touchData);
-            if(touchData.touchDown == true)
-            {
-                originData = touchData;
-                mTouchDownTime = millis();
-                mCurrState = TapState_t::ACTIVE_TAP;
-            }
-        }
-        break;
-    }
-    case (uint8_t)TapState_t::ACTIVE_TAP:
-    {
-        if(drAsserted)
-        {
-            Pinnacle_GetAbsolute(touchData);
-            if((touchData.touchDown == false) && ((millis() - mTouchDownTime) < TAP_TIMEOUT_MSEC))
-            {
-                mCurrState = TapState_t::CONFIRM_TAP;
-            }
-            else if (touchData.touchDown == true && (millis() - mTouchDownTime) > TAP_TIMEOUT_MSEC)
-            {
-                mCurrState = TapState_t::INVALID_TAP;
-            }
-        }
-
-        // Serial.print("ACTIVE STATE\r\ndr=");
-        // Serial.print(drAsserted);
-        // Serial.print(", touchDown=");
-        // Serial.print(touchData.touchDown);
-        // Serial.print(", curr state=");
-        // Serial.print((uint8_t)mCurrState);
-        // Serial.println();
-
-        break;
-    }
-    case (uint8_t)TapState_t::CONFIRM_TAP:
-    {
-        PrintQuadrant(originData);
-        mCurrState = TapState_t::IDLE; 
-        break;
-    }
-    case (uint8_t)TapState_t::INVALID_TAP:
-    {
-        if(drAsserted)
-        {
-            Pinnacle_GetAbsolute(touchData);
-            if (touchData.touchDown == false)
-            {
-                mCurrState = TapState_t::IDLE;
-            }
-        }
-
-        break; 
-    }
-    default:
-        mCurrState = TapState_t::IDLE;
-        break; 
-    }
-}
-
-void PrintQuadrant(absData_t &result)
-{
-    uint16_t x_center = PINNACLE_XMAX / 2;
-    uint16_t y_center = PINNACLE_YMAX / 2;
-
-    uint8_t quad = (result.xValue < x_center && result.yValue < y_center) ? 0 : 
-        (result.xValue > x_center && result.yValue < y_center) ? 1 : 
-        (result.xValue > x_center && result.yValue > y_center) ? 2 : 3; 
-    
-    Serial.print("Q");
-    Serial.println(quad);
+/*******************************************************************************
+ * YOUR RUNNING CODE HERE
+ ******************************************************************************/
 }
 
 /*  Pinnacle-based TM0XX0XX Functions  */
