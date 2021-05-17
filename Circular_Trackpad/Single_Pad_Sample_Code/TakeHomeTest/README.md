@@ -21,6 +21,13 @@ The test can be broken up into the following tasks.
 4. Modify the sample code to do the following:
     1. Imagine the sensor is divided into four quadrants
     2. When a touch appears in a quadrant, stays in that quadrant, and leaves within 300 msec then report a "tap in a quadrant" by printing to the serial port Qx. Where X is the quadrant number (0..3).
+	3. Test cases:
+	    a. The code has no compile warnings and no compile errors
+        b. When nothing is touching the sensor, nothing should be reported
+        c. If a finger touches a quadrant, stays in that quadrant, and lifts off within 300 msec the report happens at lift-off of the finger
+        d. If the finger touches a quadrant and slides to another quadrant, then lifts off, nothing is reported
+        e. If a finger touches a quadrant, stays touching for more than 300 msec, then lifts off, nothing is reported
+        f. After a touch is complete and tap reporting is complete, test case ii applies
 5. Send the code in for review
 
 Here is a link to a completed test and how it it is intended to function. 
@@ -43,5 +50,5 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to Jon (jonb@cirque.com), Todd (todd.rich@cirque.com) or Nolan (nolan.mcculloch@cirque.com).
-
+Zip up your project and email it to Jon (jonb of cirque period com), Todd (todd dot rich of cirque period com) or Nolan (nolan dot mcculloch of cirque period com).
+*email addresses are "some assembly required"
