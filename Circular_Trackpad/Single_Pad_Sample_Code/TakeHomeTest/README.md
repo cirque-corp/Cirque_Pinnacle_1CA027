@@ -3,8 +3,8 @@
 
 ## Objective
 
-The objective of this test it go gain an idea of your understanding of basic firmware development principles
-and get a feel for your individual coding style. You will use a circle trackpad development kit and write code that 
+The objective of this test is to gain an idea of your understanding of basic firmware development principles
+and let us get a feel for your individual coding style. You will use a circle trackpad development kit and write code that 
 will run on the Arduino. The code you write for the Arduino communicates with a circle trackpad and adds the 
 functionality shown below.
 
@@ -46,6 +46,7 @@ and Teensy documentation and examples.
 * [Teensyduino](https://www.pjrc.com/teensy/td_download.html)
 * [Demo Kit Git Repo](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027)
 * [Cirque Circle Trackpad Development Kit](https://www.cirque.com/circle-trackpad-dev-kit)
+* [Teensy Serial object](https://www.pjrc.com/teensy/td_serial.html)
 
 ## Finishing the Test
 
