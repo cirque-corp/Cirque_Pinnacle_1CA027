@@ -117,6 +117,10 @@ void setup()
   setAdcAttenuation(ADC_ATTENUATE_2X);
   tuneEdgeSensitivity();
 
+  // if the touchpad reports touches with no fingers near the pad then it may need
+  // to be calibrated. Generally it doesn't.
+  // Pinnacle_forceCalibration();
+
   Pinnacle_EnableFeed(true);
 
   Serial.println("** INITIALIZATION COMPLETE **");
@@ -128,6 +132,7 @@ void loop()
 /*******************************************************************************
  * YOUR RUNNING CODE HERE
  ******************************************************************************/
+
 }
 
 /*  Pinnacle-based TM0XX0XX Functions  */
@@ -277,6 +282,27 @@ void Pinnacle_CheckValidTouch(absData_t *touchData)
     zone_x = touchData->xValue / ZONESCALE;
     zone_y = touchData->yValue / ZONESCALE;
     touchData->hovering = !(touchData->zValue > ZVALUE_MAP[zone_y][zone_x]);
+}
+
+// Forces Pinnacle to re-calibrate. If the touchpad is reporting touches when
+// no fingers are on the pad then calibration (compensation) is wrong.
+// Calling this function will fix the problem. Warning, re-enable the feed after calling this.
+void Pinnacle_forceCalibration(void)
+{
+  uint8_t CalConfig1Value = 0x00;
+
+  Pinnacle_EnableFeed(false);
+  RAP_ReadBytes(0x07, &CalConfig1Value, 1);
+  CalConfig1Value |= 0x01;
+  RAP_Write(0x07, CalConfig1Value);
+
+  do
+  {
+    RAP_ReadBytes(0x07, &CalConfig1Value, 1);
+  }
+  while(CalConfig1Value & 0x01);
+
+  Pinnacle_ClearFlags();
 }
 
 /*  ERA (Extended Register Access) Functions  */

@@ -294,8 +294,9 @@ void Pinnacle_GetAbsolute(absData_t * result, padData_t * currPad)
   result->touchDown = result->xValue != 0;
 }
 
-// Forces Pinnacle to re-calibrate, sometimes useful when miss-compensation
-// causes touchpad to miss real touches or false touches are tringgering touch events
+// Forces Pinnacle to re-calibrate. If the touchpad is reporting touches when
+// no fingers are on the pad then calibration (compensation) is wrong.
+// Calling this function will fix the problem. Warning; re-enable the feed after calling this
 void Pinnacle_forceCalibration(padData_t * currPad)
 {
   uint8_t CalConfig1Value = 0x00;
