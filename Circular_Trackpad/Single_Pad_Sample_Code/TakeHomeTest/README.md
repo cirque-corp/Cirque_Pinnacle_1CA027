@@ -29,9 +29,6 @@ The test can be broken up into the following tasks.
         6. After a touch is complete and tap reporting is complete, test case ii applies
 5. Send the code in for review
 
-Here is a link to a completed test and how it it is intended to function. 
-[Passing Test Video](https://youtu.be/9J7DOaGZC1g)
-
 ## Helpful Links
 
 You can use any text editor you want, but the Arduino IDE will be able to build
