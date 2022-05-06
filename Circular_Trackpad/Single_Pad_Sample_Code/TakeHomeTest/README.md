@@ -47,5 +47,5 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to Jon (jonb of cirque period com), Todd (todd dot rich of cirque period com) or Nolan (nolan dot mcculloch of cirque period com).
+Zip up your project and email it to Jon (jonb of cirque period com).
 *email addresses are "some assembly required"
