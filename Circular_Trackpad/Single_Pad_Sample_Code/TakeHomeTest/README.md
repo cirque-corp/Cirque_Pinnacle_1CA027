@@ -54,5 +54,4 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to Jon (jonb of cirque period com).
-*email addresses are "some assembly required"
+Zip up your project and email it to Steve (steve.ball at cirque dot com).
