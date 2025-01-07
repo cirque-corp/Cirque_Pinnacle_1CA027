@@ -3,31 +3,38 @@
 
 ## Objective
 
-The objective of this test is to gain an idea of your understanding of basic firmware development principles
-and let us get a feel for your individual coding style. You will use a circle trackpad development kit and write code that 
-will run on the Arduino. The code you write for the Arduino communicates with a circle trackpad and adds the 
-functionality shown below.
+The objective of this test is to gain an idea of your understanding of basic firmware development principles and let us get a feel for your individual coding style. You will use a circle trackpad development kit and write code that will run on the Arduino. The code you write for the Arduino communicates with a circle trackpad and meets the test requirements listed below.
 
 ![Development Kit](CircleTrackpadDevKit_Small.jpg)
 
 ## The Test
 
-The test can be broken up into the following tasks. 
+### Tasks
 
-1. Determine if the circle touchpads are I2C or SPI interface
-2. Determine the overlay is curved or flat
-3. Clone the sample code for the correct interface and get that code built and running
-4. Modify the sample code to do the following:
-    1. Imagine the sensor is divided into four quadrants
-    2. When a touch appears in a quadrant, stays in that quadrant, and leaves within 300 msec you report a "tap in a quadrant" by printing to the serial port Qx. Where X is the quadrant number (0..3).
-	3. Test cases:
-	    1. The code has no compile warnings and no compile errors
-        2. When nothing is touching the sensor, nothing should be reported
-        3. If a finger touches a quadrant, stays in that quadrant, and lifts off within 300 msec the report happens at lift-off of the finger
-        4. If the finger touches a quadrant and slides to another quadrant, then lifts off, nothing is reported
-        5. If a finger touches a quadrant, stays touching for more than 300 msec, then lifts off, nothing is reported
-        6. After a touch is complete and tap reporting is complete, test case ii applies
-5. Send the code in for review
+1. Clone the sample code for the correct interface and get that code built and running: [TakeHomeTest.ino](TakeHomeTest.ino)
+2. Modify the sample code to meet these specifications:
+    1. Imagine the sensor is divided into four quadrants, numbered (0..3)
+    2. When a finger touches a quadrant, stays in that quadrant, and lifts off within 300 msec, you log a tap by printing to the serial port the string "Qx\n",  where 'x' is the quadrant number
+3. [Email your final code to us for review](#finishing-the-test)
+
+### Test Requirements 
+1. The code has no compile warnings and no compile errors
+2. When nothing is touching the sensor, nothing should be reported
+3. A report string is sent if and only if:
+    1. A finger touches a quadrant
+    2. The finger stays in that quadrant
+    3. The finger lifts off within 300 msec
+4. If the finger touches a quadrant and slides to another quadrant, then lifts off, nothing is reported
+5. If a finger touches a quadrant, stays touching for more than 300 msec, then lifts off, nothing is reported
+
+### Examples
+
+1. A finger touches the second quadrant and lifts off 100ms later
+    1. The code reports "Q1\n"
+2. A finger touches the fourth quadrant and stays touching for 500ms, and then lifts off
+    1. The code reports nothing (touch longer than 300ms)
+3. A finger touches the first quadrant and slides to quadrant 2, and lifts off in 100ms
+    1. The code reports nothing (touch moved quadrants)
 
 ## Helpful Links
 
