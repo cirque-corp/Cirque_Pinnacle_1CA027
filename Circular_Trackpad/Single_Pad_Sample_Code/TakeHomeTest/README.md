@@ -54,4 +54,4 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to our engineering management team (Josh.Konopka@cirque.com and Mike.Litster@cirque.com).
+Zip up your project and email it to our firmware management team (Josh.Konopka [at] cirque [dot] com and Mike.Litster [at] cirque [dot] com).
