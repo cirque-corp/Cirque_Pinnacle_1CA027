@@ -54,4 +54,4 @@ and Teensy documentation and examples.
 
 ## Finishing the Test
 
-Zip up your project and email it to Steve (steve.ball at cirque dot com).
+Zip up your project and email it to our engineering management team (Josh.Konopka@cirque.com and Mike.Litster@cirque.com).
